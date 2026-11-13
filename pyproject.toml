@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ticker-lineage"
+version = "0.2.0"
+description = "Temporal ticker-to-CIK identifier graph that measures what a naive ticker join silently gets wrong."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+    "rapidfuzz>=3.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0,<9"]   # pytest 9.x crashes internally on CPython 3.10.0
+
+[project.scripts]
+ticker-lineage = "tickerlineage.pipeline:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+tickerlineage = ["schema.sql"]

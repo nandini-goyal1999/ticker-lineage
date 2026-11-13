@@ -1,0 +1,154 @@
+{
+  "run": {
+    "generated": "2026-09-01",
+    "source": "SEC company_tickers.json via Wayback Machine CDX",
+    "snapshots": 36,
+    "period": "2017Q3 .. 2026Q3",
+    "cadence": "first available snapshot per calendar quarter",
+    "note_missing": "2026Q2 has no archived snapshot; 36 buckets cover 37 quarters"
+  },
+
+  "universe": {
+    "identifier_edges": 33268,
+    "distinct_tickers": 31787,
+    "distinct_ciks": 20154,
+    "ticker_quarter_observations": 367069
+  },
+
+  "headline": {
+    "metric": "share of ticker-quarter observations that a naive ticker-keyed join attributes to the wrong CIK",
+    "reported_range_pct": [0.902, 1.338],
+    "reported_as": "0.9% to 1.3% depending on where the clean window starts. Both endpoints are given because the choice of window is a judgement call, and hiding it behind one number would be the same sin the project is about.",
+    "windows": {
+      "strict": {
+        "value_pct": 0.902,
+        "window": "2021Q3 .. 2026Q3",
+        "observations": 227440,
+        "misattributed": 2052,
+        "reuse_tickers": 373,
+        "rationale": "Starts after the post-contraction rebuild finished. Most conservative."
+      },
+      "auto_selected": {
+        "value_pct": 1.338,
+        "window": "2020Q3 .. 2026Q3",
+        "observations": 269867,
+        "misattributed": 3612,
+        "reuse_tickers": 530,
+        "rationale": "What EdgeSet.stable_window() picks: longest run with no single-quarter composition break above 25%. Includes the 2020Q3-2021Q3 rebuild, during which row count climbed 8,426 -> 12,837 gradually enough that no single quarter trips the threshold."
+      },
+      "full_period": {
+        "value_pct": 4.102,
+        "window": "2017Q3 .. 2026Q3",
+        "observations": 367069,
+        "misattributed": 15056,
+        "reuse_tickers": 1400,
+        "status": "INFLATED. Do not quote without the caveat. Roughly a fifth of all detected transitions land on the two artifact snapshots."
+      }
+    }
+  },
+
+  "failure_classes": {
+    "ticker_reuse": {
+      "tickers_held_by_more_than_one_cik": 1400,
+      "transitions": 1481,
+      "breakdown": {
+        "reassignment": 864,
+        "holdco_restructure": 364,
+        "ambiguous": 253
+      },
+      "transitions_landing_on_artifact_snapshots": 285,
+      "transitions_clean": 1196
+    },
+    "ticker_change_cik_persists": {
+      "ciks_whose_history_fractures_under_a_ticker_key": 1124,
+      "note": "same CIK, disjoint ticker spans - e.g. Ball Corporation BLL -> BALL in 2022Q3"
+    },
+    "share_class_and_multi_listing": {
+      "ciks_with_concurrent_multiple_tickers": 5842,
+      "caveat": "mixed bucket - true share classes, preferred series, warrants, and bankruptcy Q-suffixed tickers are all in here. Not cleanly separated."
+    },
+    "survivorship": {
+      "ciks_absent_from_final_snapshot": 12137,
+      "ciks_present_2021Q1_absent_2026Q3": 3850,
+      "status": "NOT REPORTED AS A HEADLINE. Confounded by file composition changes; needs per-CIK filing-activity validation before it means anything."
+    }
+  },
+
+  "artifacts_detected": {
+    "description": "Two snapshots where the SEC file's own composition changed, not the market. These generate false reuse and false delisting signals.",
+    "2019Q4": { "rows_before": 6259, "rows_after": 13548, "delta": 7289, "transitions_at_this_snapshot": 132 },
+    "2020Q3": { "rows_before": 13633, "rows_after": 8426, "delta": -5207, "transitions_at_this_snapshot": 153 }
+  },
+
+  "verified_against_live_sec_api": [
+    {
+      "ticker": "S",
+      "from": { "cik": "101830", "name_then": "Sprint Corporation" },
+      "to": { "cik": "1583708", "name_now": "SentinelOne, Inc." },
+      "gap_quarters": 2,
+      "confirmation": "CIK 101830 is now SPRINT LLC and holds no tickers; CIK 1583708 holds S on NYSE, formerly Sentinel Labs, Inc.",
+      "verdict": "genuine reassignment"
+    },
+    {
+      "ticker": "MWG",
+      "from": { "cik": "895421", "name_then": "Morgan Stanley" },
+      "to": { "cik": "1941500", "name_now": "Multi Ways Holdings Ltd" },
+      "gap_quarters": 11,
+      "confirmation": "CIK 895421 holds MS and nine preferred series, not MWG; CIK 1941500 holds MWG on NYSE.",
+      "verdict": "genuine reassignment"
+    },
+    {
+      "ticker": "BLK",
+      "from": { "cik": "1364742", "name_then": "BlackRock, Inc." },
+      "to": { "cik": "2012383", "name_now": "BlackRock, Inc." },
+      "gap_quarters": 0,
+      "confirmation": "CIK 1364742 was renamed BlackRock Finance, Inc. on 2024-09-26. CIK 2012383, formerly BlackRock Funding, Inc., took the name and the ticker on 2024-10-01.",
+      "verdict": "holdco restructure - a ticker-keyed join survives this and a CIK-keyed join breaks on it"
+    },
+    {
+      "ticker": "GOOGL / GOOG",
+      "from": { "cik": "1288776", "name_then": "Google Inc." },
+      "to": { "cik": "1652044", "name_now": "Alphabet Inc." },
+      "gap_quarters": 0,
+      "confirmation": "Alphabet's restructuring was 2015, but the SEC ticker file only reflected it in the 2019Q4 snapshot. CIK 1288776 still files today and holds no tickers.",
+      "verdict": "real corporate event, WRONG DATE - the transition date is when SEC updated the file, not when the event happened"
+    },
+    {
+      "ticker": "UTX",
+      "from": { "cik": "101829", "name_then": "United Technologies Corporation" },
+      "to": { "cik": "2046954", "name_now": "Ultratrex Inc." },
+      "gap_quarters": 19,
+      "verdict": "genuine reassignment"
+    },
+    {
+      "ticker": "STI",
+      "from": { "cik": "750556", "name_then": "SunTrust Banks, Inc." },
+      "to": { "cik": "1881551", "name_now": "Solidion Technology Inc." },
+      "gap_quarters": 12,
+      "verdict": "genuine reassignment"
+    },
+    {
+      "ticker": "BBT",
+      "from": { "cik": "92230", "name_then": "BB&T Corporation" },
+      "to": { "cik": "1108134", "name_now": "Beacon Financial Corp" },
+      "gap_quarters": 22,
+      "verdict": "genuine reassignment"
+    },
+    {
+      "ticker": "HAWK",
+      "from": { "cik": "1411488", "name_then": "Blackhawk Network Holdings, Inc." },
+      "to": { "cik": "1750704", "name_now": "HawkEye 360, Inc." },
+      "gap_quarters": 23,
+      "verdict": "genuine reassignment"
+    }
+  ],
+
+  "known_limitations": [
+    "Gap collapsing: the edge builder extends a segment when a ticker reappears under the SAME CIK, so a delist-then-relist under one CIK is recorded as continuous. Measured effect: the segment-derived presence count exceeds the true file row count by 0 to 1,927 rows per snapshot. Reuse detection is unaffected; intra-period gaps are understated.",
+    "Transition dates are snapshot-resolution, not event-resolution. A change is dated to the first quarterly snapshot that shows it, which can lag the corporate event by years (see GOOGL).",
+    "This is SEC filer data, not a trading universe. No prices, no volumes, no exchange-level delisting records. Failure classes are real; market impact is inferred.",
+    "Wayback coverage starts 2017-08-28. Nothing before that.",
+    "The share-class bucket conflates share classes, preferreds, warrants and bankruptcy tickers. It is a count of concurrent multi-ticker CIKs, not a clean share-class count.",
+    "The submissions API's filings.recent block holds only the most recent ~1000 filings, so first-filing dates taken from it are wrong for high-volume filers. Full history requires filings.files. Life/death dating in this build does not rely on it."
+  ]
+}
